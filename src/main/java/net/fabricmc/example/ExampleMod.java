@@ -10,6 +10,15 @@ import net.minecraft.util.Util;
 
 import static net.minecraft.server.command.CommandManager.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.nio.file.StandardOpenOption;
+
+import javax.sound.sampled.AudioFormat.Encoding;
+
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 
@@ -24,7 +33,27 @@ public class ExampleMod implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register(
             this::register
 		);
-
+		
+		try {
+			this.loadConfigFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	// Apparently we have to do this from scratch;
+	// Fabric has nothing built in to load configs
+	private void loadConfigFile() throws IOException
+	{
+		Path path = Paths.get("config/easybed_config.json");
+		// Using Java's NIO library
+		if(!Files.exists(path))
+		{
+			// make a filled file
+			Files.createFile(path);
+			Files.write(path, "{\"percentage\": 0.5}".getBytes(), StandardOpenOption.WRITE);
+		}
 	}
 	
 	public void register(CommandDispatcher<ServerCommandSource> dispatcher, boolean dedicated) {
