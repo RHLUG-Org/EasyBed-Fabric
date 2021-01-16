@@ -1,4 +1,6 @@
-# Fabric Example Mod
+# EasyBed-Fabric
+
+Minecraft plugin to reimplement the features of pengooin's EasyBed on a Fabric server (https://github.com/pengooin/EasyBed)
 
 ## Setup
 
