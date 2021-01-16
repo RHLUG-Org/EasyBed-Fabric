@@ -8,4 +8,6 @@ For setup instructions please see the [fabric wiki page](https://fabricmc.net/wi
 
 ## License
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+Used the https://github.com/FabricMC/fabric-example-mod/ template, available under the CC-0 license.
+
+This project is licensed under GPLv3.
