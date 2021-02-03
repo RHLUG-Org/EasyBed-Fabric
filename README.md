@@ -2,6 +2,8 @@
 
 Minecraft plugin to reimplement the features of pengooin's EasyBed on a Fabric server (https://github.com/pengooin/EasyBed)
 
+This uses the Strategy design pattern for event handlers.
+
 ## Setup
 
 For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
