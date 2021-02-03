@@ -1,30 +1,39 @@
 package net.fabricmc.example;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.command.CommandSource;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Util;
-
-import static net.minecraft.server.command.CommandManager.*;
+import static net.minecraft.server.command.CommandManager.literal;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
+import java.util.List;
 
-import javax.sound.sampled.AudioFormat.Encoding;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
+
+import net.fabricmc.example.EasyBedConfig;
+
 public class ExampleMod implements ModInitializer {
+	
+	HashMap<String, Float> configValues = new HashMap<>();
+	GsonBuilder builder = new GsonBuilder();
+	Gson gson;
+	EasyBedConfig cfg;
+	
 	@Override
 	public void onInitialize() {
+		builder.setPrettyPrinting();
+		gson = builder.create();
+		
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
@@ -52,9 +61,17 @@ public class ExampleMod implements ModInitializer {
 		{
 			// make a filled file
 			Files.createFile(path);
-			Files.write(path, "{\"percentage\": 0.5}".getBytes(), StandardOpenOption.WRITE);
+			String json = gson.toJson(EasyBedConfig.defaultConfig());
+			Files.write(path, json.getBytes(), StandardOpenOption.WRITE);
+			
 		}
+		String json_from_file = new String (Files.readAllBytes(path));
+		System.out.println("JSON " + json_from_file);
+		cfg = gson.fromJson(json_from_file, EasyBedConfig.class);
+		System.out.println("Percentage: " + cfg.getPercentage());
 	}
+	
+	
 	
 	public void register(CommandDispatcher<ServerCommandSource> dispatcher, boolean dedicated) {
 		// Inject the vote command
