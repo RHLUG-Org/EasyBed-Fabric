@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -28,6 +29,28 @@ public class ExampleMod implements ModInitializer {
 	GsonBuilder builder = new GsonBuilder();
 	Gson gson;
 	EasyBedConfig cfg;
+	static HashSet<String> votedPlayers;
+	
+	static boolean isVoteProcess = false;
+	static int numPlayersVoted = 0;
+	
+	private boolean hasVoted(String playerUuid)
+	{
+		return votedPlayers.contains(playerUuid);
+	}
+	
+	private int getPlayersNeeded()
+	{
+		// round up (majority percent * total num players)
+		//Math.round()
+		return 111;
+	}
+	
+	private String getVoteInfoText()
+	{
+		return "Currently there are " + numPlayersVoted + 
+		" players that have voted. We need " + getPlayersNeeded() + " to change the time.";
+	}
 	
 	@Override
 	public void onInitialize() {
@@ -82,11 +105,36 @@ public class ExampleMod implements ModInitializer {
 //					MinecraftServer internalServer = context.getSource().getMinecraftServer();
 //					internalServer.sendSystemMessage(new LiteralText("You voted!"), Util.NIL_UUID);
 		            ServerCommandSource theSource = context.getSource();
-		            theSource.sendFeedback(new LiteralText("You voted!"), true);
-					
+		            
+		            if(isVoteProcess)
+		            {
+		            	String playerUuid = context.getSource().getPlayer().getUuidAsString();
+		            	if(!hasVoted(playerUuid)) {
+			            	theSource.sendFeedback(new LiteralText("Already voted!"), true);
+		            	}
+		            	else
+		            	{
+		            		numPlayersVoted++;
+		            		votedPlayers.add(playerUuid);
+		            	}
+		            	theSource.sendFeedback(new LiteralText(getVoteInfoText()), true);
+		            }
+		            else 
+		            {
+		            	theSource.sendFeedback(new LiteralText("The vote process is not active"), true);
+		            }
+		            
 					return 1;
 				}
         ));
+	}
+	
+	public static void startVoteProcess(String playerUuid)
+	{
+		isVoteProcess = true;
+		numPlayersVoted = 1;
+		votedPlayers = new HashSet<>();
+		votedPlayers.add(playerUuid);
 	}
 
 }

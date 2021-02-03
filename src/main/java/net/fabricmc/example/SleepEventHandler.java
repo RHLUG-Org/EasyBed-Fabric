@@ -1,8 +1,9 @@
 package net.fabricmc.example;
 
+import java.util.Timer;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
 
 public class SleepEventHandler implements PlayerEventHandler {
 
@@ -10,9 +11,9 @@ public class SleepEventHandler implements PlayerEventHandler {
 	public void onEvent(PlayerEntity playerInfo) {
 		if(!(playerInfo instanceof ServerPlayerEntity))
             return;
-		System.out.println("sleep success");
-		playerInfo.getCommandSource().sendFeedback(new LiteralText("Sleeping!!! Yay!"), true);
+		// Wait 3 seconds
+		Timer timer = new Timer();
+		timer.schedule(new VoteTimerTask(playerInfo), 3000);
 	}
-
 
 }
