@@ -43,17 +43,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         
 		se.onEvent(this);
         
-		try {
-			ExampleMod.startVoteProcess(this.getCommandSource().getPlayer().getUuidAsString());
-		} catch (CommandSyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     }
 
     @Inject(method = "wakeUp", at = @At("RETURN"))
     private void onWakeUp(boolean b1, boolean b2, CallbackInfo info) {
         we.onEvent(this);
     }
+    
+    
 	
 }

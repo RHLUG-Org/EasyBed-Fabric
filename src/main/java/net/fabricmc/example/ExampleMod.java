@@ -15,9 +15,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.minecraft.command.CommandSource;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
 
@@ -28,28 +31,77 @@ public class ExampleMod implements ModInitializer {
 	HashMap<String, Float> configValues = new HashMap<>();
 	GsonBuilder builder = new GsonBuilder();
 	Gson gson;
-	EasyBedConfig cfg;
-	static HashSet<String> votedPlayers;
+	static EasyBedConfig cfg;
+	static HashSet<String> votedPlayers = new HashSet<>();
 	
 	static boolean isVoteProcess = false;
 	static int numPlayersVoted = 0;
 	
-	private boolean hasVoted(String playerUuid)
+	private static boolean hasVoted(String playerUuid)
 	{
 		return votedPlayers.contains(playerUuid);
 	}
 	
-	private int getPlayersNeeded()
+	private static int getPlayersNeeded(ServerCommandSource cs)
 	{
 		// round up (majority percent * total num players)
-		//Math.round()
-		return 111;
+		return Math.round(cfg.getPercentage()*cs.getWorld().getPlayers().size());
 	}
 	
-	private String getVoteInfoText()
+	private static void resetVoteProcess()
+	{
+		isVoteProcess = false;
+		numPlayersVoted = 0;
+		votedPlayers = new HashSet<>();
+	}
+	
+	private static String getVoteInfoText(ServerCommandSource cs)
 	{
 		return "Currently there are " + numPlayersVoted + 
-		" players that have voted. We need " + getPlayersNeeded() + " to change the time.";
+		" players that have voted. We need " + getPlayersNeeded(cs) + " to change the time.";
+	}
+	
+	// *** TODO 2/27 *** for loop => all players for messages (specific Server[?] class for sends / broadcasts to everyone)
+	// skipping thunderstorms
+	// 3 second delay (for spawnpoint => vote)
+	// text message clickable (TellRaw command) so you can click /vote
+	// TellRaw => onClick event when click text, in JSON format (Bukkit)
+	// could also do color/clickable
+	
+	private static void voteThingy(ServerCommandSource cs)
+	{
+		String playerUuid = "";
+		try {
+			playerUuid = cs.getPlayer().getUuidAsString();
+		} catch (CommandSyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+		
+		if(isVoteProcess)
+        {
+        	System.out.println(playerUuid);
+        	if(hasVoted(playerUuid)) {
+            	cs.sendFeedback(new LiteralText("Already voted!"), false);
+        	}
+        	else
+        	{
+        		numPlayersVoted++;
+        		votedPlayers.add(playerUuid);
+        	}
+    		System.out.println(votedPlayers);
+    		System.out.println(getVoteInfoText(cs));
+    		cs.sendFeedback(new LiteralText(getVoteInfoText(cs)), false);
+    		
+    		if(numPlayersVoted >= getPlayersNeeded(cs)) {
+    			changeToDaytime(cs);
+			}
+        }
+        else 
+        {
+        	cs.sendFeedback(new LiteralText("The vote process is not active"), true);
+        }
 	}
 	
 	@Override
@@ -102,39 +154,26 @@ public class ExampleMod implements ModInitializer {
 	
 		dispatcher.register(literal("vote").executes(
 				context -> {
-//					MinecraftServer internalServer = context.getSource().getMinecraftServer();
-//					internalServer.sendSystemMessage(new LiteralText("You voted!"), Util.NIL_UUID);
-		            ServerCommandSource theSource = context.getSource();
-		            
-		            if(isVoteProcess)
-		            {
-		            	String playerUuid = context.getSource().getPlayer().getUuidAsString();
-		            	if(!hasVoted(playerUuid)) {
-			            	theSource.sendFeedback(new LiteralText("Already voted!"), true);
-		            	}
-		            	else
-		            	{
-		            		numPlayersVoted++;
-		            		votedPlayers.add(playerUuid);
-		            	}
-		            	theSource.sendFeedback(new LiteralText(getVoteInfoText()), true);
-		            }
-		            else 
-		            {
-		            	theSource.sendFeedback(new LiteralText("The vote process is not active"), true);
-		            }
-		            
+		            voteThingy(context.getSource());
 					return 1;
 				}
         ));
 	}
 	
-	public static void startVoteProcess(String playerUuid)
+	public static void startVoteProcess(ServerCommandSource cs)
 	{
-		isVoteProcess = true;
-		numPlayersVoted = 1;
-		votedPlayers = new HashSet<>();
-		votedPlayers.add(playerUuid);
+		if(!isVoteProcess)
+		{
+			isVoteProcess = true;
+		}
+		voteThingy(cs);
+	}
+	
+	public static void changeToDaytime(ServerCommandSource cs)
+	{
+		cs.sendFeedback(new LiteralText("Vote Successful!!! It is now daytime."), false);
+		cs.getWorld().setTimeOfDay(0);
+		resetVoteProcess();
 	}
 
 }

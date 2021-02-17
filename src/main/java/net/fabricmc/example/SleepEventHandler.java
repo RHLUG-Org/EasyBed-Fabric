@@ -9,11 +9,11 @@ public class SleepEventHandler implements PlayerEventHandler {
 
 	@Override
 	public void onEvent(PlayerEntity playerInfo) {
-		if(!(playerInfo instanceof ServerPlayerEntity))
-            return;
-		// Wait 3 seconds
+		if (!(playerInfo instanceof ServerPlayerEntity))
+			return;
+		// TODO Wait 3 seconds in the future and cancel if person is out of bed
 		Timer timer = new Timer();
-		timer.schedule(new VoteTimerTask(playerInfo), 3000);
+		timer.schedule(new VoteTimerTask(playerInfo), 1);
 	}
 
 }

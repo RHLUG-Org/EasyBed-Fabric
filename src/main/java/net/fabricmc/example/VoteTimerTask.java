@@ -17,6 +17,6 @@ public class VoteTimerTask extends TimerTask {
 	@Override
 	public void run(){
 		this.playerInfo.getCommandSource().sendFeedback(new LiteralText("Type /vote to turn the time to daytime."), true);
-		
+		ExampleMod.startVoteProcess(playerInfo.getCommandSource());
 	}
 }
