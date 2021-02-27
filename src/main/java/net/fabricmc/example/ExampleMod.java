@@ -10,6 +10,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,10 +51,10 @@ public class ExampleMod implements ModInitializer {
 	private static int getPlayersNeeded(ServerCommandSource cs)
 	{
 		// round up (majority percent * total num players)
-		return Math.round(cfg.getPercentage()*cs.getWorld().getPlayers().size());
+		return (int) Math.ceil(cfg.getPercentage()*cs.getWorld().getPlayers().size());
 	}
 	
-	private static void resetVoteProcess()
+	public static void resetVoteProcess()
 	{
 		isVoteProcess = false;
 		numPlayersVoted = 0;
@@ -191,15 +192,16 @@ public class ExampleMod implements ModInitializer {
 			long sameTimeNextDayTicks = cs.getWorld().getTimeOfDay() + DAY_LEN;
 			// this will change the time to 0 by subtracting the offset
 			cs.getWorld().setTimeOfDay(sameTimeNextDayTicks - (sameTimeNextDayTicks % DAY_LEN));
-			// https://minecraft.gamepedia.com/Commands/weather => 0 means a random number so we don't have to
-			// reimplement vanilla logic
-			cs.getWorld().setWeather(0, 0, false, false);
+			// https://github.com/Bukkit/Bukkit/blob/master/src/main/java/org/bukkit/command/defaults/WeatherCommand.java
+	        int randomDuration = (300 + new Random().nextInt(600)) * 20;
+			cs.getWorld().setWeather(randomDuration, randomDuration, false, false);
 			resetVoteProcess();
 		}
 		else {
 			cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
 					new LiteralText("The vote percentage has been reached, but we did not change\n"
-							+ "to daytime because it's already day or there is no thunder."), 
+							+ "to daytime because it's already day or there is no thunder.\n"
+							+ "The vote count has been reset to 0."), 
 					MessageType.SYSTEM,
 					Util.NIL_UUID
 			);

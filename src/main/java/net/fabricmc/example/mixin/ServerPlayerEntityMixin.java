@@ -30,7 +30,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 	
 	public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile profile) {
 		super(world, pos, yaw, profile);
-		System.out.println("SPE MIXIN This line is printed by an example mod mixin!");
+		//System.out.println("SPE MIXIN This line is printed by an example mod mixin!");
 	}
 
 	@Inject(method = "sleep", at = @At("TAIL"))

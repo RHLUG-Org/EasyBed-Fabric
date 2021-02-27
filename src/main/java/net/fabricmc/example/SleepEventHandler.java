@@ -14,6 +14,8 @@ public class SleepEventHandler implements PlayerEventHandler {
 		// TODO Wait 3 seconds in the future and cancel if person is out of bed
 		Timer timer = new Timer();
 		timer.schedule(new VoteTimerTask(playerInfo), 1);
+		// Timeout for 60 seconds = 60,000 ms
+		timer.schedule(new VoteTimeoutTask(playerInfo), 60000);
 	}
 
 }
