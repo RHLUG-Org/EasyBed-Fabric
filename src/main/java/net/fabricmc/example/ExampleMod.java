@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.ibm.icu.impl.number.Properties;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -20,13 +21,17 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
+import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
-
+import net.minecraft.util.Util;
 import net.fabricmc.example.EasyBedConfig;
 
+
 public class ExampleMod implements ModInitializer {
+	
+	static final long DAY_LEN = 24000L;
 	
 	HashMap<String, Float> configValues = new HashMap<>();
 	GsonBuilder builder = new GsonBuilder();
@@ -61,12 +66,12 @@ public class ExampleMod implements ModInitializer {
 		" players that have voted. We need " + getPlayersNeeded(cs) + " to change the time.";
 	}
 	
-	// *** TODO 2/27 *** for loop => all players for messages (specific Server[?] class for sends / broadcasts to everyone)
-	// skipping thunderstorms
+	// *** TODO 2/27 ***
 	// 3 second delay (for spawnpoint => vote)
 	// text message clickable (TellRaw command) so you can click /vote
 	// TellRaw => onClick event when click text, in JSON format (Bukkit)
 	// could also do color/clickable
+	// have a timeout for the vote after certain time it's been open
 	
 	private static void voteThingy(ServerCommandSource cs)
 	{
@@ -90,9 +95,10 @@ public class ExampleMod implements ModInitializer {
         		numPlayersVoted++;
         		votedPlayers.add(playerUuid);
         	}
-    		System.out.println(votedPlayers);
-    		System.out.println(getVoteInfoText(cs));
-    		cs.sendFeedback(new LiteralText(getVoteInfoText(cs)), false);
+    		cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+    				new LiteralText(getVoteInfoText(cs)), 
+    				MessageType.SYSTEM,
+    				Util.NIL_UUID);
     		
     		if(numPlayersVoted >= getPlayersNeeded(cs)) {
     			changeToDaytime(cs);
@@ -171,9 +177,34 @@ public class ExampleMod implements ModInitializer {
 	
 	public static void changeToDaytime(ServerCommandSource cs)
 	{
-		cs.sendFeedback(new LiteralText("Vote Successful!!! It is now daytime."), false);
-		cs.getWorld().setTimeOfDay(0);
-		resetVoteProcess();
+		// change only if during night time threshold or there are thunderstorms
+		if(cs.getWorld().getTimeOfDay() % DAY_LEN > DAY_LEN/2 || cs.getWorld().isThundering())
+		{
+			String thunderToConcat = cs.getWorld().isThundering() ? " and the thunder has been cleared" : "";
+			cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+					new LiteralText("Vote Successful!!! It is now daytime" + thunderToConcat + "."), 
+					MessageType.SYSTEM,
+					Util.NIL_UUID
+			);
+	
+			// change to a tick value in the future so we don't unintentionally go "backwards in time"
+			long sameTimeNextDayTicks = cs.getWorld().getTimeOfDay() + DAY_LEN;
+			// this will change the time to 0 by subtracting the offset
+			cs.getWorld().setTimeOfDay(sameTimeNextDayTicks - (sameTimeNextDayTicks % DAY_LEN));
+			// https://minecraft.gamepedia.com/Commands/weather => 0 means a random number so we don't have to
+			// reimplement vanilla logic
+			cs.getWorld().setWeather(0, 0, false, false);
+			resetVoteProcess();
+		}
+		else {
+			cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+					new LiteralText("The vote percentage has been reached, but we did not change\n"
+							+ "to daytime because it's already day or there is no thunder."), 
+					MessageType.SYSTEM,
+					Util.NIL_UUID
+			);
+			resetVoteProcess();
+		}
 	}
 
 }
