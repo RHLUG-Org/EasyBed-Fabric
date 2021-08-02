@@ -20,7 +20,7 @@ public class VoteTimeoutTask extends TimerTask {
 	@Override
 	public void run() {
 		if(ExampleMod.isVoteProcess) {
-			this.playerInfo.getCommandSource().getMinecraftServer().getPlayerManager().broadcastChatMessage(
+			this.playerInfo.getCommandSource().getServer().getPlayerManager().broadcastChatMessage(
 				new LiteralText("The vote has been active for too long, so we have reset it."), 
 				MessageType.SYSTEM, 
 				Util.NIL_UUID

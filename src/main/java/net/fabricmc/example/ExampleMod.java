@@ -9,25 +9,20 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.ibm.icu.impl.number.Properties;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.command.CommandSource;
 import net.minecraft.network.MessageType;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Util;
-import net.fabricmc.example.EasyBedConfig;
 
 
 public class ExampleMod implements ModInitializer {
@@ -96,7 +91,7 @@ public class ExampleMod implements ModInitializer {
         		numPlayersVoted++;
         		votedPlayers.add(playerUuid);
         	}
-    		cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+    		cs.getServer().getPlayerManager().broadcastChatMessage(
     				new LiteralText(getVoteInfoText(cs)), 
     				MessageType.SYSTEM,
     				Util.NIL_UUID);
@@ -182,7 +177,7 @@ public class ExampleMod implements ModInitializer {
 		if(cs.getWorld().getTimeOfDay() % DAY_LEN > DAY_LEN/2 || cs.getWorld().isThundering())
 		{
 			String thunderToConcat = cs.getWorld().isThundering() ? " and the thunder has been cleared" : "";
-			cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+			cs.getServer().getPlayerManager().broadcastChatMessage(
 					new LiteralText("Vote Successful!!! It is now daytime" + thunderToConcat + "."), 
 					MessageType.SYSTEM,
 					Util.NIL_UUID
@@ -198,7 +193,7 @@ public class ExampleMod implements ModInitializer {
 			resetVoteProcess();
 		}
 		else {
-			cs.getMinecraftServer().getPlayerManager().broadcastChatMessage(
+			cs.getServer().getPlayerManager().broadcastChatMessage(
 					new LiteralText("The vote percentage has been reached, but we did not change\n"
 							+ "to daytime because it's already day or there is no thunder.\n"
 							+ "The vote count has been reset to 0."), 
